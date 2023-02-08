@@ -9,6 +9,22 @@ from tqdm.auto import tqdm
 nlp = spacy.load('en_core_web_sm')
 
 def get_sents(file):
+    '''
+    Get the sentences from the text
+
+    Parameters
+    ----------
+    file : list
+        The list of lines from the text file
+    
+    Returns
+    -------
+    sents : list
+        The list of sentences
+    t_id : dict
+        The dictionary of text ids
+    '''
+
     sents = []
     sent = []
     t_id = {}
@@ -31,11 +47,14 @@ def get_sents(file):
 
 def process_text(name, sents, t_id):
     '''
-    Tags and lemmatises a cleaned text
+    Extract lemmas and POS tags from the text
 
-    name: name of the file to be processed
-    returns: a file with the following format:
-    word \t lemma \t pos \t text_id
+    Parameters
+    ----------
+    name : str
+        The name of the file
+    sents : list
+        The list of sentences
     '''
 
     if not path.exists('cleaned_tagged'):
@@ -52,8 +71,16 @@ def process_text(name, sents, t_id):
             s_c += 1
 
 def unzip_files(dir, unzip):
-    # get a list of files in the directory 
+    '''
+    Function that unzips the COHA files in the directory
 
+    Parameters
+    ----------
+    dir : str
+        The directory where the zip files are located
+    unzip : str
+        The directory where the text files will be extracted
+    '''
     if not path.exists(unzip):            
 
         files = [f for f in listdir(dir) if isfile(join(dir, f))]
@@ -66,26 +93,44 @@ def unzip_files(dir, unzip):
                 with zipfile.ZipFile(f'{dir}/{file}', 'r') as zip_ref:
                     zip_ref.extractall(unzip) 
 
-if __name__ == '__main__':
+def clean_and_tag(unzip, spellcheck=False):
+    '''
+    Clean and tag the text files
 
-    unzip = 'tagged-txt'
-    dir = 'tagged'
-    print('...Unzipping files...')
-    unzip_files(dir, unzip)
+    Parameters
+    ----------
+    unzip : str
+        The directory where the text files are located
+    spellcheck : bool, optional
+        Whether to spellcheck the text, by default False
+    '''
     files = [f for f in listdir(unzip) if isfile(join(unzip, f))]
-    print('...Cleaning and tagging files...')
     for file in tqdm(files, 
                 bar_format='{l_bar}{bar:30}{r_bar}{bar:-10b}',
                 position=0, 
                 leave=True):
-        # print(file)
         with open(f'{unzip}/{file}', 'r', encoding='unicode_escape') as f:
-            # if file already in directory, skip it
             if path.exists(f'cleaned_tagged/{file}'):
                 continue
             else:
                 sents, t_id = get_sents(f.readlines())
-                # # correct the sentences
-                # sents = checker.correct_strings(sents)
-                # process the sentences
+                if spellcheck:
+                    raise NotImplementedError
+                    # sents = checker.correct_strings(sents)
                 process_text(file, sents, t_id)
+
+
+if __name__ == '__main__':
+    # parce arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--unzip', type=str, default='tagged-txt')
+    parser.add_argument('--dir', type=str, default='tagged')
+    args = parser.parse_args()
+    unzip = args.unzip
+    dir = args.dir
+
+    # execute the cleaning process
+    print('...Unzipping files...')
+    unzip_files(dir, unzip)
+    print('...Cleaning and tagging files...')
+    clean_and_tag(unzip)
