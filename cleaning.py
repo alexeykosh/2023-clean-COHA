@@ -93,7 +93,7 @@ def unzip_files(dir, unzip):
                 with zipfile.ZipFile(f'{dir}/{file}', 'r') as zip_ref:
                     zip_ref.extractall(unzip) 
 
-def clean_and_tag(unzip, spellcheck=False):
+def clean_and_tag(unzip, clean_tag, spellcheck=False):
     '''
     Clean and tag the text files
 
@@ -110,7 +110,7 @@ def clean_and_tag(unzip, spellcheck=False):
                 position=0, 
                 leave=True):
         with open(f'{unzip}/{file}', 'r', encoding='unicode_escape') as f:
-            if path.exists(f'cleaned_tagged/{file}'):
+            if path.exists(f'{clean_tag}/{file}'):
                 continue
             else:
                 sents, t_id = get_sents(f.readlines())
@@ -123,14 +123,18 @@ def clean_and_tag(unzip, spellcheck=False):
 if __name__ == '__main__':
     # parce arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--unzip', type=str, default='tagged-txt')
-    parser.add_argument('--dir', type=str, default='tagged')
+    parser.add_argument('--unzip', type=str, help='The directory where the text files will be extracted')
+    parser.add_argument('--dir', type=str, help='The directory where the zip files are located')
+    parser.add_argument('--clean_tag', type=str, help='The directory where the cleaned and tagged files will be stored')
+    parser.add_argument('--spellcheck', type=bool, help='Whether to spellcheck the text')
     args = parser.parse_args()
     unzip = args.unzip
     dir = args.dir
+    clean_tag = args.clean_tag
+    spellcheck = args.spellcheck
 
     # execute the cleaning process
     print('...Unzipping files...')
     unzip_files(dir, unzip)
     print('...Cleaning and tagging files...')
-    clean_and_tag(unzip)
+    clean_and_tag(unzip, clean_tag, spellcheck)
